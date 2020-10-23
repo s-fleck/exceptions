@@ -4,7 +4,7 @@ ValueError <- function(
   class = NULL,
   call = NULL
 ){
-  error(message, ..., class = c(class, "ValueError"))
+  error(message, ..., class = c(class, "ValueError"), call = call)
 }
 
 
