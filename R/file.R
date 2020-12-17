@@ -28,6 +28,18 @@ FileNotFoundError <- function(
 
 
 
+#' Title
+#'
+#' @param message
+#' @param ...
+#' @param dir
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
 DirNotEmptyError <- function(
   message = sprintf("directory '%s' does not exist.", dir),
   ...,
@@ -41,6 +53,18 @@ DirNotEmptyError <- function(
 
 
 
+#' Title
+#'
+#' @param message
+#' @param ...
+#' @param dir
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
 DirNotFoundError <- function(
   message = sprintf("directory '%s' does not exist.", dir),
   ...,
@@ -54,6 +78,18 @@ DirNotFoundError <- function(
 
 
 
+#' Title
+#'
+#' @param message
+#' @param ...
+#' @param dir
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
 IsNotDirError <- function(
   message = sprintf("'%s' is not a directory.", dir),
   ...,

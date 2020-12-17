@@ -1,7 +1,7 @@
 Package: exceptions
 Type: Package
 Title: A catalouge of exceptions inspired by python base exceptions
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     person(given = "Stefan",
            family = "Fleck",
@@ -12,6 +12,9 @@ Description:
   Provides a catalogue of common exceptions, heavily inspired by python's
   built-in exception classes. See 
   https://docs.python.org/3/library/exceptions.html
+Suggests:
+  jsonlite
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1

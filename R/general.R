@@ -1,3 +1,14 @@
+#' Title
+#'
+#' @param message
+#' @param ...
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
 ValueError <- function(
   message,
   ...,
@@ -10,6 +21,18 @@ ValueError <- function(
 
 
 
+#' Title
+#'
+#' @param message
+#' @param ...
+#' @param dir
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
 NotImplementedError <- function(
   message = sprintf("functionality is not yet implemented", dir),
   ...,
