@@ -79,7 +79,7 @@ HttpBadRequestError <- function(
 #'
 #' @param type `character` scalar. Type of the error (usually `class(e)[[1]]`)
 #' @param message `character` scalar. an error message
-#' @param error `character` scalar. The http error as character scalar
+#' @param error `character` an [base::errorCondition] object
 #' @param ... arbitrary \R obejcts, as long as plumber knows how to serialize
 #'   them
 #'
@@ -90,19 +90,17 @@ HttpBadRequestError <- function(
 #' @export
 #' @seealso [errors]
 error_body <- function(
-  type,
   message,
-  error = "500 - Internal Server Error",
-  ...
+  ...,
+  class = class
 ){
-  assert(is_scalar_character(type))
+  assert(is.character(class))
   assert(is_scalar_character(message))
-  assert_namespace("jsonlite")
+
   structure(
     list(
-      error = error,
-      type = jsonlite::unbox(type),
-      message = jsonlite::unbox(message),
+      message = as.character(message),
+      class = class,
       ...
     ),
     class = c("error_body", "list")
@@ -135,21 +133,25 @@ as_error_body.default <- function(
 ){
   assert(inherits(e, "error") || inherits(e, "list"))
 
-  if (!"http_status" %in% names(e))
-    e$http_status <- 500
-
-  if (!"message" %in% names(e))
-    e$message <- "Internal Server Error"
-
-  res <- error_body(
-    error = paste(e$http_status, e$message),
-    type = class(e)[[1]],
-    message = e$message
-  )
-
-  for (nm in setdiff(names(e), c("message", "call"))){
-    res[[nm]] <- e[[nm]]
+  if (inherits(e, "error")){
+    res <- tryCatch(
+      c(unclass(e), list(class = class(e))),
+      error = function(e) message = paste("Cannot serialize error condition object: ", e)
+    )
   }
 
-  res
+  res <- compact(res)
+
+  if ("call" %in% names(res)){
+    res[["call"]] <- format(res[["call"]])
+  }
+
+  if (!"message" %in% names(res)){
+    message <- "Internal Server Error"
+  } else {
+    res[["message"]] <- as.character(res$message)
+  }
+
+
+  do.call(error_body, res)
 }
