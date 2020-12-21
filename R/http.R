@@ -23,7 +23,7 @@ HttpError <- function(
   status_parent <- paste0("http_", (http_status %/% 100) * 100)
 
   errorCondition(
-    class = union(class, c(status_class, status_parent, "HttpError", "http_error")),
+    class = union(class, c("HttpError", status_class, status_parent, "http_error")),
     message = message,
     http_status = http_status,
     ...
