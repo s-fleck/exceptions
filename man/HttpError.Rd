@@ -2,13 +2,13 @@
 % Please edit documentation in R/http.R
 \name{HttpError}
 \alias{HttpError}
-\alias{HttpServiceUnvailableError}
+\alias{HttpServiceUnavailableError}
 \alias{HttpBadRequestError}
 \title{HTTP errors}
 \usage{
 HttpError(message, http_status, ..., class = NULL, call = NULL)
 
-HttpServiceUnvailableError(message = "Service unavailable", ...)
+HttpServiceUnavailableError(message = "Service unavailable", ...)
 
 HttpBadRequestError(
   message = "HTTP 400 (Bad Request)",

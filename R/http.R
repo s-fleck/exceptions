@@ -33,7 +33,7 @@ HttpError <- function(
 
 #' @rdname HttpError
 #' @export
-HttpServiceUnvailableError <- function(
+HttpServiceUnavailableError <- function(
   message = "Service unavailable",
   ...
 ){

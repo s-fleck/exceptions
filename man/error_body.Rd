@@ -6,23 +6,23 @@
 \alias{as_error_body.default}
 \title{Error Response Body}
 \usage{
-error_body(type, message, error = "500 - Internal Server Error", ...)
+error_body(message, ..., class = class)
 
 as_error_body(e)
 
 \method{as_error_body}{default}(e)
 }
 \arguments{
-\item{type}{`character` scalar. Type of the error (usually `class(e)[[1]]`)}
-
 \item{message}{`character` scalar. an error message}
-
-\item{error}{`character` scalar. The http error as character scalar}
 
 \item{...}{arbitrary \R obejcts, as long as plumber knows how to serialize
 them}
 
 \item{e}{a `condition` S3 object (usually an `error`)}
+
+\item{type}{`character` scalar. Type of the error (usually `class(e)[[1]]`)}
+
+\item{error}{`character` an [base::errorCondition] object}
 }
 \value{
 A `list` of subclass `error_body` with elements `error`
