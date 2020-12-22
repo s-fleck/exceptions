@@ -8,6 +8,7 @@
 #'
 #'
 #' @export
+#' @seealso
 HttpError <- function(
   message,
   http_status,
@@ -29,6 +30,23 @@ HttpError <- function(
     ...
   )
 }
+
+
+
+HttpInternalServerError <- function(
+  message = "Internal Server Error",
+  http_status = 500,
+  ...
+){
+  HttpError(
+    class = "HttpInternalServerError",
+    message = message,
+    http_status = http_status,
+    ...
+  )
+}
+
+
 
 
 
