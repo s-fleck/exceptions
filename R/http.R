@@ -3,50 +3,84 @@
 #' HTTP errors
 #'
 #' Special error classes for HTTP. See also [as_error_body] for turning R errors
-#' into lists that can be returned by plumber apis.
-#'
-#'
+#' into lists that can be returned by plumber APIs
 #'
 #' @export
-#' @seealso
+#' @seealso https://tools.ietf.org/html/rfc7231#section-6
 HttpError <- function(
   message,
-  http_status,
+  status,
   ...,
+  headers = NULL,
   class = NULL,
   call = NULL
 ){
-  assert(is_scalar_integerish(http_status))
-  assert(identical(nchar(as.character(http_status)), 3L))
+  assert(is_scalar_integerish(status))
+  assert(identical(nchar(as.character(status)), 3L))
 
-  http_status   <- as.integer(http_status)
-  status_class  <- paste0("http_", http_status)
-  status_parent <- paste0("http_", (http_status %/% 100) * 100)
+  status   <- as.integer(status)
+  # compat with httr error conditions
+  status_class  <- paste0("http_", status)
+  status_parent <- paste0("http_", (status %/% 100) * 100)
 
   errorCondition(
-    class = union(class, c(status_class, status_parent, "http_error", "HttpError")),
     message = message,
-    http_status = http_status,
-    ...
+    status = status,
+    header = headers,
+    ...,
+    class = union(class, c(status_class, status_parent, "http_error", "HttpError")),
+    call = call
   )
 }
 
 
 
+
+# Server Errors -----------------------------------------------------------
+
+#' @rdname HttpError
+#' @export
+HttpServerError <- function(
+  message,
+  status,
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+){
+  assert(status %in% 500:599, "Server error status codes must be between 500 und 599")
+
+  HttpError(
+    message = message,
+    status = status,
+    ...,
+    headers = headers,
+    class = union(class, "HttpServerError"),
+    call = call
+  )
+}
+
+
+
+
+#' @rdname HttpError
+#' @export
 HttpInternalServerError <- function(
   message = "Internal Server Error",
-  http_status = 500,
-  ...
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
 ){
-  HttpError(
-    class = "HttpInternalServerError",
+  HttpServerError(
     message = message,
-    http_status = http_status,
-    ...
+    status = 500L,
+    ...,
+    headers = headers,
+    class = union(class, "HttpInternalServerError"),
+    call = call
   )
 }
-
-
 
 
 
@@ -54,16 +88,62 @@ HttpInternalServerError <- function(
 #' @rdname HttpError
 #' @export
 HttpServiceUnavailableError <- function(
-  message = "Service unavailable",
-  ...
+  message = "Service Unavailable",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL,
+  retry_after = NULL
 ){
-  HttpError(
-    class = "HttpServiceUnavailableError",
+  if (!is.null(retry_after)){
+    if (is.null(headers)){
+      headers <- list()
+    } else {
+      assert(is.list(headers))
+    }
+    headers <- c(headers, list("retry-after" = retry_after))
+  }
+
+  HttpServerError(
     message = message,
-    http_status = 503,
-    ...
+    status = 503L,
+    ...,
+    headers = headers,
+    class = union(class, "HttpServiceUnavailableError"),
+    call = call
   )
 }
+
+
+
+
+
+# Client Errors -----------------------------------------------------------
+
+#' @rdname HttpError
+#' @export
+HttpClientError <- function(
+  message,
+  status,
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+){
+  assert(status %in% 400:499, "Client error status codes must be between 500 und 599")
+
+  HttpError(
+    message = message,
+    status = status,
+    ...,
+    headers = headers,
+    class = union(class, "HttpClientError"),
+    call = call
+  )
+}
+
+
+
 
 
 
@@ -71,16 +151,17 @@ HttpServiceUnavailableError <- function(
 #' @rdname HttpError
 #' @export
 HttpBadRequestError <- function(
-  message = "HTTP 400 (Bad Request)",
-  http_status = 400,
+  message = "Bad Request",
   ...,
+  headers = headers,
   class = NULL,
   call = NULL
 ){
-  HttpError(
+  HttpClientError(
     message = message,
-    http_status = http_status,
+    status = 400L,
     ...,
+    headers = headers,
     class = union(class, "HttpBadRequestError"),
     call = call
   )

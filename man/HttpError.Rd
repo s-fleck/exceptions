@@ -2,23 +2,62 @@
 % Please edit documentation in R/http.R
 \name{HttpError}
 \alias{HttpError}
+\alias{HttpServerError}
+\alias{HttpInternalServerError}
 \alias{HttpServiceUnavailableError}
+\alias{HttpClientError}
 \alias{HttpBadRequestError}
 \title{HTTP errors}
 \usage{
-HttpError(message, http_status, ..., class = NULL, call = NULL)
+HttpError(message, status, ..., headers = NULL, class = NULL, call = NULL)
 
-HttpServiceUnavailableError(message = "Service unavailable", ...)
+HttpServerError(
+  message,
+  status,
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+)
+
+HttpInternalServerError(
+  message = "Internal Server Error",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+)
+
+HttpServiceUnavailableError(
+  message = "Service Unavailable",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL,
+  retry_after = NULL
+)
+
+HttpClientError(
+  message,
+  status,
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+)
 
 HttpBadRequestError(
-  message = "HTTP 400 (Bad Request)",
-  http_status = 400,
+  message = "Bad Request",
   ...,
+  headers = headers,
   class = NULL,
   call = NULL
 )
 }
 \description{
 Special error classes for HTTP. See also [as_error_body] for turning R errors
-into lists that can be returned by plumber apis.
+into lists that can be returned by plumber APIs
+}
+\seealso{
+https://tools.ietf.org/html/rfc7231#section-6
 }
