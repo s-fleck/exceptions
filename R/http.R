@@ -164,9 +164,6 @@ HttpClientError <- function(
 
 
 
-
-
-
 #' @rdname HttpError
 #' @export
 HttpBadRequestError <- function(
@@ -182,6 +179,28 @@ HttpBadRequestError <- function(
     ...,
     headers = headers,
     class = union(class, "HttpBadRequestError"),
+    call = call
+  )
+}
+
+
+
+
+#' @rdname HttpError
+#' @export
+HttpNotFoundError <- function(
+  message = "Not Found",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+){
+  HttpClientError(
+    message = message,
+    status = 404L,
+    ...,
+    headers = headers,
+    class = union(class, "HttpNotFoundError"),
     call = call
   )
 }

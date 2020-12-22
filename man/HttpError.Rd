@@ -8,6 +8,7 @@
 \alias{HttpServiceUnavailableError}
 \alias{HttpClientError}
 \alias{HttpBadRequestError}
+\alias{HttpNotFoundError}
 \alias{TimeoutError}
 \title{Raised when a connection is reset by the peer. Corresponds to errno ECONNRESET.}
 \usage{
@@ -58,7 +59,15 @@ HttpClientError(
 HttpBadRequestError(
   message = "Bad Request",
   ...,
-  headers = headers,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+)
+
+HttpNotFoundError(
+  message = "Not Found",
+  ...,
+  headers = NULL,
   class = NULL,
   call = NULL
 )
