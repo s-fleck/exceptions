@@ -43,7 +43,7 @@ HttpError <- function(
   errorCondition(
     message = message,
     status = status,
-    header = headers,
+    headers = headers,
     ...,
     class = union(class, c(status_class, status_parent, "http_error", "HttpError")),
     call = call
