@@ -172,7 +172,7 @@ HttpClientError <- function(
 HttpBadRequestError <- function(
   message = "Bad Request",
   ...,
-  headers = headers,
+  headers = NULL,
   class = NULL,
   call = NULL
 ){
