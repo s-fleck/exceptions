@@ -220,7 +220,7 @@ handle_http_error <- function(
   s <- err$status
   res$status <- if (is.null(s)) 500L else s
 
-  if (h %in% names(err$headers)){
+  for (h in names(err$headers)){
     res$setHeader(h, err$headers[[h]])
   }
 
