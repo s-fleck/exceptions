@@ -54,9 +54,31 @@ HttpBadRequestError(
   call = NULL
 )
 }
+\value{
+an \verb{error condition} object with the subclasses
+\code{HttpError}, \code{http_error} and \verb{http_<status>}. The latter two are for
+compatability with \code{\link[httr:http_condition]{httr::http_condition()}} objects. The error conditions
+reflect the hirarchy, e.g. \code{HttpServiceUnavailableError} inherits from
+\code{HttpServerError}, \code{HttpError}, \code{http_500}, \code{http_error}.
+}
 \description{
-Special error classes for HTTP. See also [as_error_body] for turning R errors
-into lists that can be returned by plumber APIs
+Special error classes for HTTP. See also \link{as_http_error_body} for turning R errors
+into lists that can be returned by plumber APIs.
+}
+\examples{
+
+print(class(HttpServiceUnavailableError()))
+
+tryCatch(
+  stop(HttpServiceUnavailableError()),
+  HttpServiceUnavailableError = function(e) print(e)
+)
+
+tryCatch(
+  stop(HttpServiceUnavailableError()),
+  http_503 = function(e) print(e)
+)
+
 }
 \seealso{
 https://tools.ietf.org/html/rfc7231#section-6

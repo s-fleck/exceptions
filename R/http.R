@@ -1,12 +1,29 @@
-# http --------------------------------------------------------------------
-
 #' HTTP errors
 #'
-#' Special error classes for HTTP. See also [as_error_body] for turning R errors
-#' into lists that can be returned by plumber APIs
+#' Special error classes for HTTP. See also [as_http_error_body] for turning R errors
+#' into lists that can be returned by plumber APIs.
+#'
+#' @return an `error condition` object with the subclasses
+#' `HttpError`, `http_error` and `http_<status>`. The latter two are for
+#' compatability with [httr::http_condition()] objects. The error conditions
+#' reflect the hirarchy, e.g. `HttpServiceUnavailableError` inherits from
+#' `HttpServerError`, `HttpError`, `http_500`, `http_error`.
 #'
 #' @export
 #' @seealso https://tools.ietf.org/html/rfc7231#section-6
+#'
+#' @examples
+#' print(class(HttpServiceUnavailableError()))
+#'
+#' tryCatch(
+#'   stop(HttpServiceUnavailableError()),
+#'   HttpServiceUnavailableError = function(e) print(e)
+#' )
+#'
+#' tryCatch(
+#'   stop(HttpServiceUnavailableError()),
+#'   http_503 = function(e) print(e)
+#' )
 HttpError <- function(
   message,
   status,
@@ -21,7 +38,7 @@ HttpError <- function(
   status   <- as.integer(status)
   # compat with httr error conditions
   status_class  <- paste0("http_", status)
-  status_parent <- paste0("http_", (status %/% 100) * 100)
+  status_parent <- paste0("http_", (status %/% 100L) * 100L)
 
   errorCondition(
     message = message,
@@ -32,6 +49,8 @@ HttpError <- function(
     call = call
   )
 }
+
+
 
 
 
@@ -172,6 +191,45 @@ HttpBadRequestError <- function(
 
 # json api error objects ---------------------------------------------------
 
+#' Handle HttpErrors in plumber APIs
+#'
+#' @param req a plumber Request object
+#' @param res a plumber Response object
+#' @param err the error
+#'
+#' @return an [http_error_body] list object
+#' @export
+#' @seealso
+#' * https://github.com/rstudio/plumber/pull/507#issuecomment-675693897
+#' * https://www.rplumber.io/
+#'
+#' @examples
+#' \dontrun{
+#'
+#' #* @plumber
+#' function(pr) {
+#'   pr_set_error(pr, handle_http_error)
+#' }
+#'
+#'
+handle_http_error <- function(
+  req,
+  res,
+  err
+){
+  s <- err$status
+  res$status <- if (is.null(s)) 500L else s
+
+  if (h %in% names(err$headers)){
+    res$setHeader(h, err$headers[[h]])
+  }
+
+  as_http_error_body(err)
+}
+
+
+
+
 #' Error Response Body
 #'
 #' @param type `character` scalar. Type of the error (usually `class(e)[[1]]`)
@@ -180,13 +238,13 @@ HttpBadRequestError <- function(
 #' @param ... arbitrary \R obejcts, as long as plumber knows how to serialize
 #'   them
 #'
-#' @return A `list` of subclass `error_body` with elements `error`
+#' @return A `list` of subclass `http_error_body` with elements `error`
 #'   (the http), `type`,
 #'   and `message`
 #'
 #' @export
 #' @seealso [errors]
-error_body <- function(
+http_error_body <- function(
   message,
   ...,
   class = class
@@ -200,32 +258,32 @@ error_body <- function(
       class = class,
       ...
     ),
-    class = c("error_body", "list")
+    class = c("http_error_body", "list")
   )
 }
 
 
 
-#' `as_error_body()` converts \R condition objects to lists that plumber knows
+#' `as_http_error_body()` converts \R condition objects to lists that plumber knows
 #' how to serialze to.
 #'
 #' @param e a `condition` S3 object (usually an `error`)
 #'
 #'
-#' @rdname error_body
+#' @rdname http_error_body
 #' @export
-as_error_body <- function(
+as_http_error_body <- function(
   e
 ){
-  UseMethod("as_error_body")
+  UseMethod("as_http_error_body")
 }
 
 
 
 
-#' @rdname error_body
+#' @rdname http_error_body
 #' @export
-as_error_body.default <- function(
+as_http_error_body.default <- function(
   e
 ){
   assert(inherits(e, "error") || inherits(e, "list"))
@@ -250,5 +308,5 @@ as_error_body.default <- function(
   }
 
 
-  do.call(error_body, res)
+  do.call(http_error_body, res)
 }
