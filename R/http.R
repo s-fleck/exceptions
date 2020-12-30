@@ -52,6 +52,54 @@ HttpError <- function(
 
 
 
+#' Title
+#'
+#' @param x
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+as_http_error <- function(
+  x,
+  ...
+){
+  UseMethod("as_http_error")
+}
+
+#' Title
+#'
+#' @param x
+#' @param ...
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
+as_http_error.response <- function(
+  x,
+  ...,
+  class = NULL,
+  call = NULL
+){
+  status  <- httr::status_code(x)
+  message <- httr::http_status(x)$reason
+  headers <- httr::headers(x)
+
+  HttpError(
+    message = message,
+    status = status,
+    headers = headers,
+    req = x,
+    ...,
+    class = class,
+    call = call
+  )
+}
+
 
 
 

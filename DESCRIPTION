@@ -1,7 +1,7 @@
 Package: exceptions
 Type: Package
 Title: A catalouge of exceptions inspired by python base exceptions
-Version: 0.0.14
+Version: 0.0.15
 Authors@R: 
     person(given = "Stefan",
            family = "Fleck",
@@ -14,7 +14,8 @@ Description:
   https://docs.python.org/3/library/exceptions.html
 Suggests:
     jsonlite,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    httr
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
