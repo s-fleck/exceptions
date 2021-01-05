@@ -374,6 +374,12 @@ as_http_error_body.default <- function(
     res[["message"]] <- as.character(res$message)
   }
 
+  res[["content"]] <- tryCatch(
+    format(httr::content(res)),
+    error = function(e) NULL
+  )
+
+  res <- compact(res)
 
   do.call(http_error_body, res)
 }
