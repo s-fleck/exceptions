@@ -93,7 +93,7 @@ as_http_error.response <- function(
     message = message,
     status = status,
     headers = headers,
-    req = x,
+    response = x,
     ...,
     class = class,
     call = call
