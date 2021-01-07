@@ -316,12 +316,14 @@ http_error_body <- function(
   ...,
   class = class
 ){
+  message <- paste(as.character(message), collapse = " ")
+
   assert(is.character(class))
   assert(is_scalar_character(message))
 
   structure(
     list(
-      message = as.character(message),
+      message = message,
       class = class,
       ...
     ),
