@@ -1,7 +1,7 @@
 Package: exceptions
 Type: Package
 Title: A catalouge of exceptions inspired by python base exceptions
-Version: 0.0.19
+Version: 0.0.21
 Authors@R: 
     person(given = "Stefan",
            family = "Fleck",

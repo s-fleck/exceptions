@@ -9,6 +9,7 @@
 \alias{HttpClientError}
 \alias{HttpBadRequestError}
 \alias{HttpNotFoundError}
+\alias{HttpConflictError}
 \alias{TimeoutError}
 \title{Raised when a connection is reset by the peer. Corresponds to errno ECONNRESET.}
 \usage{
@@ -66,6 +67,14 @@ HttpBadRequestError(
 
 HttpNotFoundError(
   message = "Not Found",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+)
+
+HttpConflictError(
+  message = "Conflict",
   ...,
   headers = NULL,
   class = NULL,

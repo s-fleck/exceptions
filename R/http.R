@@ -256,6 +256,28 @@ HttpNotFoundError <- function(
 
 
 
+#' @rdname HttpError
+#' @export
+HttpConflictError <- function(
+  message = "Conflict",
+  ...,
+  headers = NULL,
+  class = NULL,
+  call = NULL
+){
+  HttpClientError(
+    message = message,
+    status = 409L,
+    ...,
+    headers = headers,
+    class = union(class, "HttpConflictError"),
+    call = call
+  )
+}
+
+
+
+
 # json api error objects ---------------------------------------------------
 
 #' Handle HttpErrors in plumber APIs
