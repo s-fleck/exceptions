@@ -34,9 +34,8 @@ ValueError <- function(
 #'
 #' @examples
 NotImplementedError <- function(
-  message = sprintf("functionality is not yet implemented", dir),
+  message = sprintf("functionality is not yet implemented"),
   ...,
-  dir,
   class = NULL,
   call = NULL
 ){
