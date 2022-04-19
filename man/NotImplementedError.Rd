@@ -5,9 +5,8 @@
 \title{Title}
 \usage{
 NotImplementedError(
-  message = sprintf("functionality is not yet implemented", dir),
+  message = sprintf("functionality is not yet implemented"),
   ...,
-  dir,
   class = NULL,
   call = NULL
 )

@@ -2,10 +2,17 @@
 % Please edit documentation in R/os.R
 \name{OsError}
 \alias{OsError}
-\title{Connection Errors}
+\alias{TimeoutError}
+\title{System-related error}
 \usage{
 OsError(message = "Os-level Error", ..., class = NULL, call = NULL)
+
+TimeoutError(message = "Timeout Error", ..., class = NULL, call = NULL)
 }
 \description{
-Connection Errors
+Raised when a system function returns a system-related error, including I/O
+failures such as “file not found” or “disk full” (not for illegal argument
+types or other incidental errors).
+
+Raised when a system function timed out at the system level. Corresponds to errno ETIMEDOUT.
 }

@@ -19,7 +19,7 @@ ConnectionError <- function(
 
 
 #' Raised when a connection is reset by the peer. Corresponds to errno ECONNRESET.
-#' @rdname HttpError
+#' @rdname ConnectionError
 #' @export
 ConnectionResetError <- function(
   message = "Connection reset by peer",

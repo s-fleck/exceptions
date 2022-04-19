@@ -1,4 +1,8 @@
-#' Connection Errors
+#' System-related error
+#'
+#' Raised when a system function returns a system-related error, including I/O
+#' failures such as “file not found” or “disk full” (not for illegal argument
+#' types or other incidental errors).
 #'
 #' @export
 OsError <- function(
@@ -18,8 +22,10 @@ OsError <- function(
 
 
 
-#' Raised when a connection is reset by the peer. Corresponds to errno ECONNRESET.
-#' @rdname HttpError
+#' Timeout error
+#'
+#' Raised when a system function timed out at the system level. Corresponds to errno ETIMEDOUT.
+#' @rdname OsError
 #' @export
 TimeoutError <- function(
   message = "Timeout Error",

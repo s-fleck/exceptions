@@ -2,11 +2,19 @@
 % Please edit documentation in R/connections.R
 \name{ConnectionError}
 \alias{ConnectionError}
+\alias{ConnectionResetError}
 \alias{ConnectionRefusedError}
 \alias{ConnectionAbortedError}
 \title{Connection Errors}
 \usage{
 ConnectionError(message = "Connection error", ..., class = NULL, call = NULL)
+
+ConnectionResetError(
+  message = "Connection reset by peer",
+  ...,
+  class = NULL,
+  call = NULL
+)
 
 ConnectionRefusedError(
   message = "Connection refused by peer",
@@ -24,6 +32,8 @@ ConnectionAbortedError(
 }
 \description{
 Connection Errors
+
+Raised when a connection is reset by the peer. Corresponds to errno ECONNRESET.
 
 Raised when a connection attempt is refused by the peer. Corresponds to errno ECONNREFUSED.
 

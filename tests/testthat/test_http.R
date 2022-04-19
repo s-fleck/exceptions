@@ -11,7 +11,7 @@ test_that("http works as expected", {
 
 test_that("as_http_error works as expected", {
 
-  x <- httr::GET("www.google.com/oidwavwevjsdnytwethweoi")
+  x <- httr::GET("http://www.google.com/oidwavwevjsdnytwethweoi")
 
   stop_if_http_error <- function(x){
     if (httr::http_error(x)){
