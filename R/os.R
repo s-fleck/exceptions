@@ -11,7 +11,7 @@ OsError <- function(
   class = NULL,
   call = NULL
 ){
-  errorCondition(
+  error(
     message = message,
     ...,
     class = union(class, "OsError"),

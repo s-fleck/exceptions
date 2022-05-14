@@ -40,7 +40,7 @@ HttpError <- function(
   status_class  <- paste0("http_", status)
   status_parent <- paste0("http_", (status %/% 100L) * 100L)
 
-  errorCondition(
+  error(
     message = message,
     status = status,
     headers = headers,
@@ -50,55 +50,6 @@ HttpError <- function(
   )
 }
 
-
-
-#' Title
-#'
-#' @param x
-#' @param ...
-#'
-#' @return
-#' @export
-#'
-#' @examples
-as_http_error <- function(
-  x,
-  ...
-){
-  UseMethod("as_http_error")
-}
-
-#' Title
-#'
-#' @param x
-#' @param ...
-#' @param class
-#' @param call
-#'
-#' @return
-#' @export
-#'
-#' @examples
-as_http_error.response <- function(
-  x,
-  ...,
-  class = NULL,
-  call = NULL
-){
-  status  <- httr::status_code(x)
-  message <- httr::http_status(x)$reason
-  headers <- httr::headers(x)
-
-  HttpError(
-    message = message,
-    status = status,
-    headers = headers,
-    response = x,
-    ...,
-    class = class,
-    call = call
-  )
-}
 
 
 
@@ -271,6 +222,65 @@ HttpConflictError <- function(
     ...,
     headers = headers,
     class = union(class, "HttpConflictError"),
+    call = call
+  )
+}
+
+
+
+
+# coercion -------------------------------------------------------------
+
+
+
+#' Title
+#'
+#' @param x
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+as_http_error <- function(
+    x,
+    ...
+){
+  UseMethod("as_http_error")
+}
+
+
+
+
+#' Title
+#'
+#' @param x
+#' @param ...
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
+as_http_error.response <- function(
+    x,
+    ...,
+    class = NULL,
+    call = NULL
+){
+  assert_namespace(httr)
+  status  <- httr::status_code(x)
+  message <- httr::http_status(x)$reason
+  headers <- httr::headers(x)
+
+  HttpError(
+    message = message,
+    status = status,
+    headers = headers,
+    response = x,
+    ...,
+    class = class,
     call = call
   )
 }
