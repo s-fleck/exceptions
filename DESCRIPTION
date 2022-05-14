@@ -15,7 +15,9 @@ Description:
 Suggests:
     jsonlite,
     testthat (>= 3.0.0),
-    httr
+    httr,
+    httr2,
+    crayon
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
