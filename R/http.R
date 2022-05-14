@@ -288,6 +288,35 @@ as_http_error.response <- function(
 
 
 
+#' @inheritParams HttpError
+#' @rdname as_http_error
+#' @export
+as_http_error.httr2_response <- function(
+    x,
+    ...,
+    class = NULL,
+    call = NULL
+){
+  assert_namespace("httr2")
+  status  <- httr2::resp_status(x)
+  message <- httr2::resp_status_desc(x)
+  headers <- httr2::resp_headers(x)
+
+  HttpError(
+    message = message,
+    status = status,
+    headers = headers,
+    response = x,
+    ...,
+    class = class,
+    call = call
+  )
+}
+
+
+
+
+
 # json api error objects ---------------------------------------------------
 
 #' Handle HttpErrors in plumber APIs
