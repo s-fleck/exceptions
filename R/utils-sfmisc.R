@@ -1,6 +1,4 @@
-# sfmisc utils 1.0.2
-
-
+# sfmisc utils 1.1.1
 
 
 # utils -------------------------------------------------------------------
@@ -14,7 +12,7 @@
 #' @param x a vector
 #' @param width (maximum) width of result
 #' @param dots `character` scalar. String to use for ellipses
-#' @inheritParams paste
+#' @inheritParams base::paste
 #'
 #' @return a `character` scalar
 #' @noRd
@@ -22,7 +20,6 @@
 #' @examples
 #'   ptrunc(month.abb)
 #'   ptrunc(month.abb, month.name)
-#'
 ptrunc <- function(
   ...,
   width = 40L,
@@ -42,7 +39,16 @@ ptrunc <- function(
 
 
 
-
+#' Format class of an object
+#'
+#' @param open,close opening and closing bracket to use for formatting
+#'
+#' @noRd
+#' @examples
+#' x <- iris
+#' class(x) <- c("flowers", "data.frame")
+#' class_fmt(x)
+#' fmt_class(class(x))
 fmt_class <- function(x, open = "<", close = ">"){
   paste0(open, paste(x, collapse = "/"), close)
 }
@@ -52,14 +58,18 @@ fmt_class <- function(x, open = "<", close = ">"){
 
 #' @param x any \R object
 #' @param ignore subclasses to ignore
+#'
+#' @rdname fmt_class
 #' @noRd
-class_fmt <- function(x, ignore = NULL){
-  fmt_class(setdiff(class(x), ignore))
+class_fmt <- function(x, ignore = NULL, open = "<", close = ">"){
+  fmt_class(setdiff(class(x), ignore), open = open, close = close)
 }
 
 
 
 
+#' Remove NULLs from an object (usually a list)
+#' @noRd
 compact <- function(x){
   x[!vapply(x, is.null, FALSE)]
 }
@@ -67,6 +77,19 @@ compact <- function(x){
 
 
 
+#' Apply a function to each element of a list or vector (without returning anything)
+#'
+#' Like lapply, but return `.x` instead of the results of `.f`
+#'
+#' @param .x an atomic `vector` or a `list`
+#' @param .f a `function`
+#' @param ... arguments passed on to `.f`
+#'
+#' @return `.x`
+#'
+#' @noRd
+#' @examples
+#' walk(month.name, print)
 walk <- function(.x, .f, ...){
   for (i in seq_along(.x)){
     .f(.x[[i]], ...)
@@ -82,54 +105,72 @@ walk <- function(.x, .f, ...){
 
 #' Assert a condition
 #'
-#' A simpler and more efficient for [base::stopifnot()] that has an easy
-#' mechanism for supplying custom error messages. As opposed to `stopifnot()`,
-#' `assert()` only works with a single (scalar) assertions.
+#' A simpler and more efficient replacement for [base::stopifnot()].
+#' As opposed to `stopifnot()`, `assert()` only works with a single (scalar) assertions.
 #'
-#' @param cond `TRUE` or `FALSE` (without any attributes). `FALSE` will throw
-#'   an exception with an automatically constructed error message (if `...`
-#'   was not supplied). Anything else will throw an exception stating that
-#'   `cond` was not valid.
-#' @param ... passed on to [stop()]
-#' @param call. passed on to [stop()]
-#' @param domain passed on to [stop()]
+#' @param cond `TRUE` or `FALSE` (without any attributes).
+#'   * `TRUE` will return `TRUE`
+#'   * `FALSE` will throw an exception with an automatically constructed
+#'     error if none was supplied in `...`.
+#'   * any other value will throw an error indicating that `cond` was illegal
+#' @param ... Either `character` scalars that will be combined with [base::paste0()]
+#'   or a single `condition` object.
 #'
 #' @noRd
 #'
-#' @return TRUE on success
-#'
+#' @return `TRUE` on success
+#' @seealso [assert_all()]
 #' @examples
-#'
 #' \dontrun{
-#' assert(1 == 1)
-#' assert(1 == 2)
+#'   assert(1 == 1)
+#'   assert(1 == 2)
+#'   assert(1 == 2, "one is not ", "two")
+#'   assert(1 == 2, errorCondition("one is not two", class = "ObviousError"))
 #' }
-#'
-#'
 assert <- function(
   cond,
   ...,
-  call. = FALSE,
-  domain = NULL
+  call = sys.call(-1)
 ){
   if (identical(cond, TRUE)){
     return(TRUE)
-  } else if (identical(cond, FALSE)){
-    if (identical(length(list(...)), 0L)){
+  }
+
+  if (identical(cond, FALSE)){
+
+    dots <- list(...)
+
+    if (identical(length(dots), 0L)){
       msg <- paste0("`", deparse(match.call()[[2]]), "`", " is not 'TRUE'")
-      stop(msg, call. = call., domain = domain)
     } else {
-      suppressWarnings( stop(..., call. = call., domain = domain) )
+
+      if (inherits(dots[[1]], "condition")){
+        stop(dots[[1]])
+      }
+
+      msg <- suppressWarnings(paste0(...))
     }
 
   } else {
-    stop("Assertion must be either 'TRUE' or 'FALSE'")
+    msg <- "Assertion must be either 'TRUE' or 'FALSE'"
   }
+
+  error <- structure(
+    list(
+      message = as.character(msg),
+      call = call
+    ),
+    class = c("assertError", "error", "condition")
+  )
+
+  stop(error)
 }
 
 
 
 
+#' Assert a package is installed
+#' @noRd
 assert_namespace <- function(...){
   pkgs <- c(...)
 
@@ -165,8 +206,10 @@ assert_namespace <- function(...){
 
 # predicates --------------------------------------------------------------
 
-
-
+#' Convenient predicate functions
+#' @param x Any \R Object.
+#' @return either `TRUE` or `FALSE`
+#' @noRd
 is_error <- function(x){
   inherits(x, "error")
 }
@@ -174,6 +217,8 @@ is_error <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_try_error <- function(x){
   inherits(x, "try-error")
 }
@@ -181,6 +226,8 @@ is_try_error <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar <- function(x){
   identical(length(x), 1L)
 }
@@ -188,6 +235,8 @@ is_scalar <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_POSIXct <- function(x){
   inherits(x, "POSIXct")
 }
@@ -195,6 +244,8 @@ is_POSIXct <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_POSIXct <- function(x){
   is_POSIXct(x) && is_scalar(x)
 }
@@ -202,6 +253,8 @@ is_scalar_POSIXct <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_POSIXlt <- function(x){
   inherits(x, "POSIXlt")
 }
@@ -209,6 +262,8 @@ is_POSIXlt <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_POSIXlt <- function(x){
   is_POSIXlt(x) && is_scalar(x)
 }
@@ -216,6 +271,8 @@ is_scalar_POSIXlt <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_POSIXt <- function(x){
   inherits(x, "POSIXt")
 }
@@ -223,6 +280,8 @@ is_POSIXt <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_POSIXt <- function(x){
   is_POSIXt(x) && is_scalar(x)
 }
@@ -230,6 +289,8 @@ is_scalar_POSIXt <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_Date <- function(x){
   inherits(x, "Date")
 }
@@ -237,6 +298,8 @@ is_Date <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_Date <- function(x){
   is_Date(x) && is_scalar(x)
 }
@@ -244,6 +307,8 @@ is_scalar_Date <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_list <- function(x){
   is_list(x) && is_scalar(x)
 }
@@ -251,6 +316,8 @@ is_scalar_list <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_atomic <- function(x){
   is.atomic(x) && is_scalar(x)
 }
@@ -258,6 +325,8 @@ is_scalar_atomic <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_logical <- function(x){
   is.logical(x) && is_scalar(x)
 }
@@ -265,6 +334,8 @@ is_scalar_logical <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_integer <- function(x){
   is.integer(x) && is_scalar(x)
 }
@@ -272,6 +343,8 @@ is_scalar_integer <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_factor <- function(x){
   is.factor(x) && is_scalar(x)
 }
@@ -279,6 +352,8 @@ is_scalar_factor <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_list <- function(x){
   is.list(x) && is_scalar(x)
 }
@@ -286,6 +361,8 @@ is_scalar_list <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_numeric <- function(x){
   is.numeric(x) && is_scalar(x)
 }
@@ -293,6 +370,8 @@ is_scalar_numeric <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_character <- function(x){
   is.character(x) && is_scalar(x)
 }
@@ -300,6 +379,8 @@ is_scalar_character <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_vector <- function(x){
   is.atomic(x) || is.list(x)
 }
@@ -307,6 +388,8 @@ is_vector <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_bool <- function(x){
   is.logical(x) && !anyNA(x)
 }
@@ -321,7 +404,6 @@ is_bool <- function(x){
 #' @param x Any \R Object.
 #' @return either `TRUE` or `FALSE`
 #' @noRd
-#'
 is_scalar_bool <- function(x){
   identical(x, TRUE) || identical(x, FALSE)
 }
@@ -336,8 +418,12 @@ is_scalar_bool <- function(x){
 #' @param x Any \R Object.
 #' @return either `TRUE` or `FALSE`
 #' @noRd
-#'
-is_integerish <- function(x){
+is_integerish <- function(x, na_rm = FALSE){
+
+  if (na_rm){
+    x <- x[!is.na(x)]
+  }
+
   if (!is.numeric(x)){
     FALSE
   } else {
@@ -348,6 +434,8 @@ is_integerish <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_scalar_integerish <- function(x){
   is_scalar(x) && is_integerish(x)
 }
@@ -355,6 +443,8 @@ is_scalar_integerish <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_n <- function(x){
   is_scalar_integerish(x) && identical(x > 0, TRUE)
 }
@@ -362,6 +452,8 @@ is_n <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_n0 <- function(x){
   is_scalar_integerish(x) && identical(x >= 0, TRUE)
 }
@@ -443,7 +535,7 @@ is_candidate_key <- function(x){
 
   if (is.atomic(x)){
     # !is.infinite instead of is.finite because x can be a character vector
-    length(x) > 1 &&
+    length(x) >= 1 &&
     all(!is.infinite(x)) &&
     !any(is.na(x)) &&
     identical(length(unique(x)), length(x))
@@ -460,7 +552,9 @@ is_candidate_key <- function(x){
 
 
 
-# https://modern-sql.com/feature/is-distinct-from
+#' @rdname is_error
+#' @seealso  https://modern-sql.com/feature/is-distinct-from
+#' @noRd
 is_not_distinct_from <- function(x, y){
   ((x == y) & !is.na(x) & !is.na(y)) | (is.na(x) & is.na(y))
 }
@@ -468,13 +562,16 @@ is_not_distinct_from <- function(x, y){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_distinct_from <- function(x, y){
   ((x != y) & !is.na(x) & !is.na(y)) | (is.na(x) != is.na(y))
 }
 
 
 
-
+#' @rdname is_error
+#' @noRd
 is_windows_path <- function(x){
   nchar(x) >= 2 & grepl("^[A-Za-z].*", x) & substr(x, 2, 2) == ":"
 }
@@ -482,6 +579,8 @@ is_windows_path <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_dir <- function(x){
   dir.exists(x) & file.info(x)[["isdir"]]
 }
@@ -489,6 +588,8 @@ is_dir <- function(x){
 
 
 
+#' @rdname is_error
+#' @noRd
 is_empty_dir <- function(x){
   is_dir(x) &&
   identical(length(list.files(x, all.files = TRUE, include.dirs = TRUE, no.. = TRUE)), 0L)
@@ -497,8 +598,6 @@ is_empty_dir <- function(x){
 # equalish ----------------------------------------------------------------
 
 #' Check for equality within a tolerance level
-#'
-#'
 #'
 #' @param x,y `numeric` vectors
 #' @param tolerance `numeric` scalar. tolerance level (absolute value). Defaults
@@ -510,13 +609,11 @@ is_empty_dir <- function(x){
 #' @noRd
 #' @seealso [.Machine]
 #'
-#'
 #' @examples
 #' a <- 0.7
 #' b <- 0.2
 #' a - b == 0.5
 #' equalish(a - b, 0.5)
-#'
 equalish <- function(x, y, tolerance = .Machine$double.eps ^ 0.5){
   assert(is_scalar_numeric(tolerance) && tolerance >= 0)
   abs(x - y) < tolerance
@@ -530,14 +627,12 @@ equalish <- function(x, y, tolerance = .Machine$double.eps ^ 0.5){
 #'   defined as `abs(x - y) / pmax(abs(x), abs(y))`. If both `x` and `y` are
 #'   `0` the relative difference is not defined, but this function will still
 #'   return `TRUE`.
-#'
+#' @rdname equalish
 #' @noRd
 #' @examples
-#'
 #' equalish_frac(1000, 1010, tolerance = 0.01)
 #' equalish_frac(1000, 1010, tolerance = 0.009)
 #' equalish_frac(0, 0)
-#'
 equalish_frac <- function(x, y, tolerance = .Machine$double.eps ^ 0.5){
   assert(is_scalar_numeric(tolerance) && tolerance >= 0)
   res <- abs(x - y) / pmax(abs(x), abs(y)) < tolerance
@@ -579,14 +674,11 @@ as_scalar <- function(x){
 #'   length 0 (e.g. `NULL`, `numeric()`, ...)
 #'
 #' @noRd
-#' @family special equality checks
-#' @return `TRUE/FALSE`
+#' @return `TRUE` or `FALSE`
 #'
 #' @examples
-#'
 #' all_are_identical(c(1,2,3))
 #' all_are_identical(c(1,1,1))
-#'
 all_are_identical <- function(x, empty_value = FALSE) {
   assert(length(empty_value) <= 1)
 
@@ -612,16 +704,13 @@ all_are_identical <- function(x, empty_value = FALSE) {
 #'
 #' @inheritParams all_are_identical
 #'
-#' @return TRUE/FALSE
+#' @return `TRUE` or `FALSE`
 #'
 #' @noRd
-#' @family special equality checks
 #'
 #' @examples
-#'
-#' all_are_identical(c(1,2,3))
-#' all_are_identical(c(1,1,1))
-#'
+#' all_are_distinct(c(1,2,3))
+#' all_are_distinct(c(1,1,1))
 all_are_distinct <- function(
   x,
   empty_value = FALSE
@@ -662,12 +751,18 @@ n_distinct <- function(x){
 pad_left <- function(
   x,
   width = max(nchar(paste(x))),
-  pad = " "
+  pad = " ",
+  preserve_na = FALSE
 ){
   diff <- pmax(width - nchar(paste(x)), 0L)
   padding <-
     vapply(diff, function(i) paste(rep.int(pad, i), collapse = ""), character(1))
-  paste0(padding, x)
+  res <- paste0(padding, x)
+
+  if (preserve_na)
+    res[is.na(x)] <- NA_character_
+
+  res
 }
 
 
@@ -676,12 +771,18 @@ pad_left <- function(
 pad_right <- function(
   x,
   width = max(nchar(paste(x))),
-  pad = " "
+  pad = " ",
+  preserve_na = FALSE
 ){
   diff <- pmax(width - nchar(paste(x)), 0L)
   padding <-
     vapply(diff, function(i) paste(rep.int(pad, i), collapse = ""), character(1))
   paste0(x, padding)
+
+  if (preserve_na)
+    res[is.na(x)] <- NA_character_
+
+  res
 }
 
 
@@ -766,7 +867,7 @@ commaset <- function(..., collapse = ", "){
 
 
 
-#' Clean up paths to make them comparable, inspired by fs::path_tidy
+#' Clean up paths to make them comparable, inspired by [fs::path_tidy()]
 #'
 #' @param x `character` vector
 #'
@@ -798,6 +899,15 @@ path_tidy <- function(x){
 
 
 
+#' Clean up urls to make them comparable
+#' @noRd
+url_tidy <- function(...){
+  sub("/", "//", gsub("/+", "/", paste(..., sep = "/")))
+}
+
+
+
+
 #' Return (unique) duplicated elements of a vector or rows of a data.frame
 #'
 #' For every element/row of `x` that has at least one duplicate, return one
@@ -820,6 +930,213 @@ dupes <- function(x, ...){
     row.names(res) <- NULL
     res
   }
+}
+
+
+
+
+#' Turn a character vector to camelCase
+#'
+#' **EXPERIMENTAL**
+#'
+#' @param x a `character` vector
+#' @param sep_pattern a `regex` pattern to match separators
+#'
+#' @return a `character` vector that follows camelCase guidelines
+#' @noRd
+#'
+#' @examples
+#' camelCase("foo_bar")
+camelCase <- function(x, sep_pattern = "_|\\s"){
+  assert(is.character(x))
+  assert(is_scalar_character(sep_pattern))
+  substr(x, 1, 1) <- tolower(substr(x, 1, 1))
+
+  if (any(grepl(sep_pattern, x))){
+    x <- gsub(paste0("^((", sep_pattern, ")*)|", "((", sep_pattern, ")*$)"), "", x)
+    sep_positions <- gregexpr(sep_pattern, x)
+
+    res <- vapply(
+      seq_along(x),
+      function(i_strings){
+        string <- x[[i_strings]]
+        i_seps <- sep_positions[[i_strings]]
+
+        if (!identical(i_seps, -1L)){
+          for (i_sep in i_seps){
+            substr(string, i_sep + 1L, i_sep + 1L) <- toupper(substr(string, i_sep + 1L, i_sep + 1L))
+          }
+        }
+
+        string
+      },
+      character(1)
+    )
+    res <- gsub(sep_pattern, "", res)
+  } else {
+    res <- x
+  }
+
+  res
+}
+
+
+
+#' Create description string for listlike R objects Rd documentation
+#'
+#' **EXPERIMENTAL**
+#'
+#' @param x any \R object
+#' @noRd
+rd_describe_str <- function(x){
+
+  types <- paste0("`", vapply(x, class_fmt, character(1)), "`")
+
+  cat(paste0("\\describe{\n",
+    paste0("  \\item{", paste(names(x), types), "}{ }", collapse = "\n"),
+    "\n}"))
+}
+
+
+
+
+#' Simple data validation
+#'
+#' **EXPERIMENTAL** Minimalistic mutli-criteria data validation. Designed to
+#' work nicely together with `assert_all()` (see examples)
+#'
+#' @param ... Arbitrary expressions that evaluate to either `TRUE` or `FALSE`.
+#'   Expressions that evaluate to anything else, will be counted as `FALSE` and
+#'   throw a warning. You can name the expressions to generate nice labels
+#'  (but that's usually not necessary).
+#' @param .all `logical` scalar. Wrap each expression in `...` in `all()`
+#'   (useful for validating columns in `data.frames`)
+#'
+#' @return a named `logical` vector that is guranteed to have no `NAs`.
+#' @noRd
+#'
+#' @examples
+#' validation <- validate(
+#'   all(iris$Petal.Length < 5),
+#'   `all species are valid` = all(iris$Species %in% c("setosa", "versicolor", "virginica")),
+#'   `all sepals are small` = all(iris$Sepal.Length < 1)
+#' )
+#'
+#' # validate can be used `with()` for added convenience:
+#' validation <- with(iris, validate(
+#'   all(Petal.Length < 5),
+#'   `all species are valid` = all(Species %in% c("setosa", "versicolor", "virginica")),
+#'   `all sepals are small` = all(Sepal.Length < 1)
+#' ))
+#'
+#' # validate works together with assert_all to produce nice errors
+#' try(
+#'   assert_all(validation)
+#' )
+validate <- function(
+    ...,
+    .all = TRUE
+){
+  assert(is_scalar_bool(.all))
+  expressions <- eval(substitute(alist(...)))
+
+  result <- logical(length(expressions))
+  criteria  <- character(length(expressions))
+  criteria_names <- names(expressions)
+  if (is.null(criteria_names)){
+    criteria_names <- character(length(expressions))
+  }
+
+
+  for (i in seq_along(expressions)){
+    criteria[[i]] <- paste(deparse(expressions[[i]], width.cutoff = 500L), collapse = " ")
+
+    result[[i]] <-  tryCatch({
+      res <- eval(expressions[[i]], envir = parent.frame(), enclos = parent.frame())
+      if (.all){
+        res <- all(res)
+      }
+      if (!is_scalar_bool(res)){
+        stop("Cannot validate expression ", i, ": `", criteria[[i]], "` does not evaluate to either `TRUE` or `FALSE`", call. = FALSE)
+      }
+      res
+    },
+
+    error = function(e){
+      warning(e$message, call. = FALSE)
+      FALSE
+    })
+  }
+
+  names(result) <- ifelse(is_blank(criteria_names), criteria, criteria_names)
+  result
+}
+
+
+
+
+#' Assert all elements of a vector or list are `TRUE`
+#'
+#' Check if all elements of `x` are `TRUE`, and throw an informative warning that
+#' contains the position and name (if any) of the element
+#'
+#' @param ... `logical` vectors or `lists` with only `logical` elements
+#' @inheritParams assert
+#'
+#' @return `TRUE`
+#' @seealso [assert()]
+#' @noRd
+#'
+#' @examples
+#' try(
+#'   assert_all(c("this is true" = TRUE, "this is FALSE" = FALSE, FALSE))
+#'   assert_all(
+#'     list(a = c(TRUE, FALSE), b = TRUE),
+#'     list(TRUE)
+#'   )
+#' )
+assert_all <- function(
+  ...,
+  call = sys.call(-1)
+){
+
+  conds <- unlist(list(...))
+
+  if (all(conds)){
+    return(TRUE)
+  }
+
+  element_names <- names(conds)
+  if (is.null(element_names)){
+    element_names <- character(length(conds))
+  }
+
+  warning_messages <- character(0)
+
+  for (i in seq_along(conds)){
+    if (!isTRUE(conds[[i]])){
+      if (is_blank(element_names[[i]])){
+        warning_messages <- c(
+          warning_messages,
+          paste0("[", i, "] is not TRUE"))
+
+      } else {
+        warning_messages <- c(
+          warning_messages,
+          paste0("[", i, "] `", element_names[[i]], "` is not TRUE"))
+      }
+    }
+  }
+
+  error <- structure(
+    list(
+      message = paste0(c("Assertion failed", warning_messages), collapse = "\n"),
+      call = call
+    ),
+    class = c("assertError", "error", "condition")
+  )
+
+  stop(error)
 }
 
 # nocov end
