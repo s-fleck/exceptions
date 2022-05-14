@@ -3,14 +3,26 @@
 \name{http_error_body}
 \alias{http_error_body}
 \alias{as_http_error_body}
-\alias{as_http_error_body.default}
+\alias{as_http_error_body.list}
+\alias{as_http_error_body.error}
+\alias{as_http_error_body.rlang_error}
+\alias{as_http_error_body.httr2_http}
+\alias{as_http_error_body.response}
 \title{Error Response Body}
 \usage{
-http_error_body(message, ..., class = class)
+http_error_body(message, ..., class = NULL)
 
 as_http_error_body(e)
 
-\method{as_http_error_body}{default}(e)
+\method{as_http_error_body}{list}(e)
+
+\method{as_http_error_body}{error}(e)
+
+\method{as_http_error_body}{rlang_error}(e)
+
+\method{as_http_error_body}{httr2_http}(e)
+
+\method{as_http_error_body}{response}(e)
 }
 \arguments{
 \item{message}{\code{character} scalar. an error message}

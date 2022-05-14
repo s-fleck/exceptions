@@ -269,7 +269,7 @@ as_http_error.response <- function(
     class = NULL,
     call = NULL
 ){
-  assert_namespace(httr)
+  assert_namespace("httr")
   status  <- httr::status_code(x)
   message <- httr::http_status(x)$reason
   headers <- httr::headers(x)
@@ -313,6 +313,24 @@ as_http_error.httr2_response <- function(
   )
 }
 
+
+
+
+#' @inheritParams HttpError
+#' @rdname as_http_error
+#' @export
+as_http_error.httr2_http <- function(
+    x,
+    ...,
+    class = NULL,
+    call = NULL
+){
+  if ("resp" %in% names(x)){
+    as_http_error(x[["resp"]])
+  } else {
+    as_http_error.error(resp)
+  }
+}
 
 
 
@@ -375,19 +393,19 @@ handle_http_error <- function(
 http_error_body <- function(
   message,
   ...,
-  class = class
+  class = NULL
 ){
   message <- paste(as.character(message), collapse = " ")
 
-  assert(is.character(class))
+  assert(is.null(class) || is.character(class))
   assert(is_scalar_character(message))
 
   structure(
-    list(
+    compact(list(
       message = message,
       class = class,
       ...
-    ),
+    )),
     class = c("http_error_body", "list")
   )
 }
@@ -413,36 +431,87 @@ as_http_error_body <- function(
 
 #' @rdname http_error_body
 #' @export
-as_http_error_body.default <- function(
+as_http_error_body.list <- function(
   e
 ){
-  assert(inherits(e, "error") || inherits(e, "list"))
+  e <- compact(e)
+  e <- lapply(e, function(.) tryCatch(format(.), error = function(.) NULL))
 
-  if (inherits(e, "error")){
-    res <- tryCatch(
-      c(unclass(e), list(class = class(e))),
-      error = function(e) message = paste("Cannot serialize error condition object: ", e)
-    )
+  if (!"message" %in% names(e)){
+    e[["message"]] <- "Internal Server Error"
   }
 
-  res <- compact(res)
-
-  if ("call" %in% names(res)){
-    res[["call"]] <- format(res[["call"]])
+  if (!"status" %in% names(e)){
+    e[["status"]] <- 500L
+  } else if (is_integerish(e[["status"]])){
+    e[["status"]] <- as.integer(e[["status"]])
   }
 
-  if (!"message" %in% names(res)){
-    message <- "Internal Server Error"
-  } else {
-    res[["message"]] <- as.character(res$message)
+  do.call(http_error_body, e)
+}
+
+
+
+#' @rdname http_error_body
+#' @export
+as_http_error_body.error <- function(
+  e
+){
+  as_http_error_body(unclass(e))
+}
+
+
+
+#' @rdname http_error_body
+#' @export
+as_http_error_body.rlang_error <- function(
+  e
+){
+  e <- unclass(e)
+
+  if ("trace" %in% names(e)){
+    tryCatch({
+      # in two steps, so that the trace still gets formatted in the unlikely
+      # case that crayon is not available
+      e[["trace"]] <- format(e[["trace"]])
+      e[["trace"]] <- crayon::strip_style(format(e[["trace"]]))
+    }, error = function(e) NULL)
   }
+  as_http_error_body(e)
+}
 
-  res[["content"]] <- tryCatch(
-    format(httr::content(res)),
-    error = function(e) NULL
-  )
 
-  res <- compact(res)
 
-  do.call(http_error_body, res)
+
+#' @rdname http_error_body
+#' @export
+as_http_error_body.httr2_http <- function(
+  e
+){
+  content_type <- tolower(httr2::resp_content_type(e$resp))
+
+  tryCatch({
+    if (identical(content_type, "application/json")){
+      e[["response_body"]] <- httr2::resp_body_json(e$resp)
+    } else if (content_type %in% c("application/xml", "text/xml")){
+      e[["response_body"]] <- httr2::resp_body_xml(e$resp)
+    } else {
+      e[["response_body"]] <- httr2::resp_body_string(e$resp)
+    }
+  }, error = function(e) NULL)
+
+  e[["resp"]] <- NULL
+
+  as_http_error_body.rlang_error(e)
+}
+
+
+
+
+#' @rdname http_error_body
+#' @export
+as_http_error_body.response <- function(
+  e
+){
+  as_http_error_body(as_http_error(e))
 }

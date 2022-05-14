@@ -2,9 +2,15 @@
 % Please edit documentation in R/http.R
 \name{as_http_error}
 \alias{as_http_error}
+\alias{as_http_error.httr2_response}
+\alias{as_http_error.httr2_http}
 \title{Title}
 \usage{
 as_http_error(x, ...)
+
+\method{as_http_error}{httr2_response}(x, ..., class = NULL, call = NULL)
+
+\method{as_http_error}{httr2_http}(x, ..., class = NULL, call = NULL)
 }
 \arguments{
 \item{...}{}
