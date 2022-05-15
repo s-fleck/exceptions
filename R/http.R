@@ -1,7 +1,7 @@
 #' HTTP errors
 #'
-#' Special error classes for HTTP. See also [as_http_error_body] for turning R errors
-#' into lists that can be returned by plumber APIs.
+#' Special error classes for HTTP. See also [as_http_error_body()] for
+#' turning R errors into lists that can be returned by plumber APIs.
 #'
 #' @return an `error condition` object with the subclasses
 #' `HttpError`, `http_error` and `http_<status>`. The latter two are for
@@ -32,10 +32,8 @@ HttpError <- function(
   class = NULL,
   call = NULL
 ){
-  assert(is_scalar_integerish(status))
-  assert(identical(nchar(as.character(status)), 3L))
+  status <- normalize_http_status(status)
 
-  status   <- as.integer(status)
   # compat with httr error conditions
   status_class  <- paste0("http_", status)
   status_parent <- paste0("http_", (status %/% 100L) * 100L)
@@ -251,6 +249,30 @@ as_http_error <- function(
 
 
 
+#' Title
+#'
+#' @param x
+#' @param ...
+#' @param class
+#' @param call
+#'
+#' @return
+#' @export
+#'
+#' @examples
+as_http_error.error <- function(
+    x,
+    ...
+){
+  x <- as.list(x)
+  dots <- list(...)
+  x <- x[!names(x) %in% names(dots)]
+
+  do.call(HttpError, c(as.list(x), list(...)))
+}
+
+
+
 
 #' Title
 #'
@@ -266,18 +288,15 @@ as_http_error <- function(
 as_http_error.response <- function(
     x,
     ...,
-    class = NULL,
-    call = NULL
+    class = "HttrResponseError"
 ){
   assert_namespace("httr")
   status  <- httr::status_code(x)
   message <- httr::http_status(x)$reason
-  headers <- httr::headers(x)
 
   HttpError(
     message = message,
     status = status,
-    headers = headers,
     response = x,
     ...,
     class = class,
@@ -441,14 +460,15 @@ as_http_error_body.list <- function(
     e[["message"]] <- "Internal Server Error"
   }
 
-  if (!"status" %in% names(e)){
+  e[["status"]] <- as.integer(e[["status"]])
+
+  if (!is_scalar_integerish(e[["status"]])){
     e[["status"]] <- 500L
-  } else if (is_integerish(e[["status"]])){
-    e[["status"]] <- as.integer(e[["status"]])
   }
 
   do.call(http_error_body, e)
 }
+
 
 
 
@@ -514,4 +534,29 @@ as_http_error_body.response <- function(
   e
 ){
   as_http_error_body(as_http_error(e))
+}
+
+
+
+
+# utils -------------------------------------------------------------------
+
+normalize_http_status <- function(x){
+  internal_server_error_status <- 500L
+
+  if (missing(x)){
+    return(internal_server_error_status)
+  }
+
+  if (!is_scalar_atomic(x)){
+    return(internal_server_error_status)
+  }
+
+  x <- as.integer(x)
+
+  if (is.na(x)){
+    return(internal_server_error_status)
+  }
+
+  x
 }

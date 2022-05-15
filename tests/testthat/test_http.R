@@ -1,11 +1,3 @@
-test_that("http works as expected", {
-
-  x <- try(stop(), silent = TRUE)
-  r <- as_http_error_body(attr(x, "condition"))
-
-  expect_s3_class(r, "list")
-})
-
 
 
 
@@ -30,7 +22,23 @@ test_that("as_http_error works as expected", {
 
 
 
-test_that("as_error_body works with simple errorConditions", {
+test_that("as_http_error preserves data in error object", {
+
+  err <- errorCondition("a simple error", iris = iris)
+
+  http_err <- as_http_error(err, cars = cars)
+
+  expect_identical(http_err$status, 500L)
+  expect_identical(http_err$iris, iris)
+  expect_identical(http_err$cars, cars)
+
+
+
+})
+
+# as_http_error ------------------------------------------------------
+
+test_that("as_http_error_body() works with base errorConditions", {
   x <- errorCondition("a message", some_data = 123)
   body <- as_http_error_body(x)
   expect_s3_class(body, "http_error_body")
@@ -40,46 +48,97 @@ test_that("as_error_body works with simple errorConditions", {
 
 
 
-test_that("as_error_body works with simple errors", {
-  x <- tryCatch(
-    stop("a simple error"),
-    error = function(e) {
-      as_http_error_body(e)
-    }
-  )
-
+test_that("as_http_error_body() works for regularily cought errors", {
+  x <- tryCatch(stop("a simple error"), error = identity)
   body <- as_http_error_body(x)
-  expect_s3_class(as_http_error_body(x), "http_error_body")
+  expect_s3_class(body, "list")
+  expect_s3_class(body, "http_error_body")
   expect_true("call" %in% names(as_http_error_body(x)))
 })
 
 
 
 
-test_that("as_error_body works with rlang errors", {
-  x <- tryCatch(
-    rlang::abort("an rlang error"),
-    error = function(e) as_http_error_body(e)
-  )
-
-  expect_s3_class(as_http_error_body(x), "http_error_body")
+test_that("as_http_error_body() works with rlang errors", {
+  x <- tryCatch(rlang::abort("an rlang error"), error = identity)
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
 })
 
 
 
-test_that("as_http_error works with httr2 errors", {
+
+test_that("as_http_error_body() works with httr error responses", {
+  x <- httr::GET("http://www.google.com/oidwavwevjsdnytwethweoi")
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+  expect_identical(body[["status"]], 404L)
+})
+
+
+
+
+test_that("as_http_error_body() works with httr2 errors", {
   x <- tryCatch(
     httr2::req_perform(httr2::request("http://127.0.0.1/sdklubngv489bvt")),
-    error = function(e) as_http_error_body(e)
+    error = identity
   )
 
-  expect_s3_class(as_http_error_body(x), "http_error_body")
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+  expect_identical(body[["status"]], 404L)
+})
+
+
+# as_http_error_body ------------------------------------------------------
+
+test_that("as_http_error_body() works with base errorConditions", {
+  x <- errorCondition("a message", some_data = 123)
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+  expect_false("call" %in% names(body))
 })
 
 
 
 
-test_that("as_http_error works with httr errors", {
+test_that("as_http_error_body() works for regularily cought errors", {
+  x <- tryCatch(stop("a simple error"), error = identity)
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "list")
+  expect_s3_class(body, "http_error_body")
+  expect_true("call" %in% names(as_http_error_body(x)))
+})
+
+
+
+
+test_that("as_http_error_body() works with rlang errors", {
+  x <- tryCatch(rlang::abort("an rlang error"), error = identity)
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+})
+
+
+
+
+test_that("as_http_error_body() works with httr error responses", {
   x <- httr::GET("http://www.google.com/oidwavwevjsdnytwethweoi")
-  expect_s3_class(as_http_error_body(x), "http_error_body")
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+  expect_identical(body[["status"]], 404L)
+})
+
+
+
+
+test_that("as_http_error_body() works with httr2 errors", {
+  x <- tryCatch(
+    httr2::req_perform(httr2::request("http://127.0.0.1/sdklubngv489bvt")),
+    error = identity
+  )
+
+  body <- as_http_error_body(x)
+  expect_s3_class(body, "http_error_body")
+  expect_identical(body[["status"]], 404L)
 })

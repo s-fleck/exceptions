@@ -80,8 +80,8 @@ reflect the hirarchy, e.g. \code{HttpServiceUnavailableError} inherits from
 \code{HttpServerError}, \code{HttpError}, \code{http_500}, \code{http_error}.
 }
 \description{
-Special error classes for HTTP. See also \link{as_http_error_body} for turning R errors
-into lists that can be returned by plumber APIs.
+Special error classes for HTTP. See also \code{\link[=as_http_error_body]{as_http_error_body()}} for
+turning R errors into lists that can be returned by plumber APIs.
 }
 \examples{
 print(class(HttpServiceUnavailableError()))
